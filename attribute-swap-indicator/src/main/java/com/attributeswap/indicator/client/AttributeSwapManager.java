@@ -24,7 +24,6 @@ public class AttributeSwapManager {
             return;
         }
         PlayerEntity player = client.player;
-
         checkSwap(player, "max_health", "armor",
                 getVal(player, "max_health"), getVal(player, "armor"));
         checkSwap(player, "movement_speed", "attack_speed",
@@ -38,7 +37,6 @@ public class AttributeSwapManager {
         double prevB = previousValues.getOrDefault(nameB, currentB);
         double deltaA = currentA - prevA;
         double deltaB = currentB - prevB;
-
         if (deltaA < -CHANGE_THRESHOLD && deltaB > CHANGE_THRESHOLD) {
             renderer.triggerSwap(formatName(nameA), formatName(nameB), prevA, currentB);
         } else if (deltaB < -CHANGE_THRESHOLD && deltaA > CHANGE_THRESHOLD) {
@@ -57,7 +55,6 @@ public class AttributeSwapManager {
                 case "attack_speed" -> player.getAttributeInstance(EntityAttributes.ATTACK_SPEED);
                 case "attack_damage" -> player.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE);
                 case "knockback_resistance" -> player.getAttributeInstance(EntityAttributes.KNOCKBACK_RESISTANCE);
-                case "armor_toughness" -> player.getAttributeInstance(EntityAttributes.ARMOR_TOUGHNESS);
                 default -> null;
             };
             return inst != null ? inst.getValue() : 0.0;
