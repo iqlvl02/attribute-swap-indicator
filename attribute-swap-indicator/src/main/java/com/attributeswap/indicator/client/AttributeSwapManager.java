@@ -1,8 +1,8 @@
 package com.attributeswap.indicator.client;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,15 +24,14 @@ public class AttributeSwapManager {
             return;
         }
         PlayerEntity player = client.player;
-        checkSwap(player, "max_health", "armor",
-                getVal(player, "max_health"), getVal(player, "armor"));
-        checkSwap(player, "movement_speed", "attack_speed",
-                getVal(player, "movement_speed"), getVal(player, "attack_speed"));
-        checkSwap(player, "attack_damage", "knockback_resistance",
-                getVal(player, "attack_damage"), getVal(player, "knockback_resistance"));
+        checkSwap(player, "max_health", "armor");
+        checkSwap(player, "movement_speed", "attack_speed");
+        checkSwap(player, "attack_damage", "knockback_resistance");
     }
 
-    private void checkSwap(PlayerEntity player, String nameA, String nameB, double currentA, double currentB) {
+    private void checkSwap(PlayerEntity player, String nameA, String nameB) {
+        double currentA = getVal(player, nameA);
+        double currentB = getVal(player, nameB);
         double prevA = previousValues.getOrDefault(nameA, currentA);
         double prevB = previousValues.getOrDefault(nameB, currentB);
         double deltaA = currentA - prevA;
