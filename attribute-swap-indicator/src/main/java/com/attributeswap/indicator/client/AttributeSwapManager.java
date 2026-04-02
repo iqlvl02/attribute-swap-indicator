@@ -1,10 +1,9 @@
 package com.attributeswap.indicator.client;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,15 +11,6 @@ public class AttributeSwapManager {
 
     private static final double CHANGE_THRESHOLD = 0.001;
     private final Map<String, Double> previousValues = new HashMap<>();
-
-    private static final String[][] SWAP_PAIRS = {
-            {"generic.max_health",       "generic.armor"},
-            {"generic.movement_speed",   "generic.attack_speed"},
-            {"generic.attack_damage",    "generic.knockback_resistance"},
-            {"generic.armor",            "generic.armor_toughness"},
-            {"generic.luck",             "generic.attack_damage"},
-    };
-
     private final SwapIndicatorRenderer renderer;
 
     public AttributeSwapManager(SwapIndicatorRenderer renderer) {
@@ -33,29 +23,46 @@ public class AttributeSwapManager {
             previousValues.clear();
             return;
         }
-
         PlayerEntity player = client.player;
 
-        for (String[] pair : SWAP_PAIRS) {
-            String attrA = pair[0];
-            String attrB = pair[1];
+        checkSwap(player, "max_health", "armor",
+                getVal(player, "max_health"), getVal(player, "armor"));
+        checkSwap(player, "movement_speed", "attack_speed",
+                getVal(player, "movement_speed"), getVal(player, "attack_speed"));
+        checkSwap(player, "attack_damage", "knockback_resistance",
+                getVal(player, "attack_damage"), getVal(player, "knockback_resistance"));
+    }
 
-            double currentA = getAttributeValue(player, attrA);
-            double currentB = getAttributeValue(player, attrB);
-            double prevA = previousValues.getOrDefault(attrA, currentA);
-            double prevB = previousValues.getOrDefault(attrB, currentB);
+    private void checkSwap(PlayerEntity player, String nameA, String nameB, double currentA, double currentB) {
+        double prevA = previousValues.getOrDefault(nameA, currentA);
+        double prevB = previousValues.getOrDefault(nameB, currentB);
+        double deltaA = currentA - prevA;
+        double deltaB = currentB - prevB;
 
-            double deltaA = currentA - prevA;
-            double deltaB = currentB - prevB;
+        if (deltaA < -CHANGE_THRESHOLD && deltaB > CHANGE_THRESHOLD) {
+            renderer.triggerSwap(formatName(nameA), formatName(nameB), prevA, currentB);
+        } else if (deltaB < -CHANGE_THRESHOLD && deltaA > CHANGE_THRESHOLD) {
+            renderer.triggerSwap(formatName(nameB), formatName(nameA), prevB, currentA);
+        }
+        previousValues.put(nameA, currentA);
+        previousValues.put(nameB, currentB);
+    }
 
-            if (deltaA < -CHANGE_THRESHOLD && deltaB > CHANGE_THRESHOLD) {
-                renderer.triggerSwap(formatAttributeName(attrA), formatAttributeName(attrB), prevA, currentB);
-            } else if (deltaB < -CHANGE_THRESHOLD && deltaA > CHANGE_THRESHOLD) {
-                renderer.triggerSwap(formatAttributeName(attrB), formatAttributeName(attrA), prevB, currentA);
-            }
-
-            previousValues.put(attrA, currentA);
-            previousValues.put(attrB, currentB);
+    private double getVal(PlayerEntity player, String name) {
+        try {
+            EntityAttributeInstance inst = switch (name) {
+                case "max_health" -> player.getAttributeInstance(EntityAttributes.MAX_HEALTH);
+                case "armor" -> player.getAttributeInstance(EntityAttributes.ARMOR);
+                case "movement_speed" -> player.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
+                case "attack_speed" -> player.getAttributeInstance(EntityAttributes.ATTACK_SPEED);
+                case "attack_damage" -> player.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE);
+                case "knockback_resistance" -> player.getAttributeInstance(EntityAttributes.KNOCKBACK_RESISTANCE);
+                case "armor_toughness" -> player.getAttributeInstance(EntityAttributes.ARMOR_TOUGHNESS);
+                default -> null;
+            };
+            return inst != null ? inst.getValue() : 0.0;
+        } catch (Exception e) {
+            return 0.0;
         }
     }
 
@@ -63,21 +70,8 @@ public class AttributeSwapManager {
         renderer.triggerSwap(from, to, fromVal, toVal);
     }
 
-    private double getAttributeValue(PlayerEntity player, String attributeId) {
-        try {
-            Identifier id = Identifier.of(attributeId);
-            var attr = Registries.ATTRIBUTE.getEntry(id);
-            if (attr.isPresent()) {
-                EntityAttributeInstance inst = player.getAttributeInstance(attr.get());
-                if (inst != null) return inst.getValue();
-            }
-        } catch (Exception ignored) {}
-        return 0.0;
-    }
-
-    private String formatAttributeName(String id) {
-        String name = id.contains(".") ? id.substring(id.lastIndexOf('.') + 1) : id;
-        String[] words = name.split("_");
+    private String formatName(String id) {
+        String[] words = id.split("_");
         StringBuilder sb = new StringBuilder();
         for (String w : words) {
             if (!w.isEmpty()) {
