@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "attributeswapindicator",
+  "version": "${version}",
+  "name": "Attribute Swap Indicator",
+  "description": "Shows a visual HUD indicator when attribute swapping succeeds in Minecraft 1.21.1",
+  "authors": ["You"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.attributeswap.indicator.client.AttributeSwapIndicatorClient"
+    ]
+  },
+  "mixins": [
+    "attributeswapindicator.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}
